@@ -5,6 +5,8 @@ import * as os from 'os';
 import * as child from 'child_process';
 
 const arch = os.arch();
+const platform = os.platform()
+const commandSuffix = platform === "win32" ? ".exe" : "";
 
 async function createTempFile(postfix: string) {
     return await new Promise<{ name: string, removeCallback: () => void }>((resolve, reject) => {
@@ -12,7 +14,7 @@ async function createTempFile(postfix: string) {
             if (err) {
                 reject(err);
             } else {
-                resolve({ name, removeCallback });
+                resolve({name, removeCallback});
             }
         });
     });
@@ -54,14 +56,16 @@ async function readFileBuffer(name: string) {
 }
 
 export function executeFunc(args: string[]) {
-    const fiftPath = path.resolve(__dirname, '..', 'bin', 'macos', arch === 'arm64' ? 'func-arm64' : 'func');
-    child.execSync(fiftPath + ' ' + args.join(' '), {
+    const command = (arch === 'arm64' ? 'func-arm64' : 'func') + commandSuffix;
+    const funcPath = path.resolve(__dirname, '..', 'bin', platform, command);
+    child.execSync(funcPath + ' ' + args.join(' '), {
         stdio: 'inherit'
     });
 }
 
 export function executeFift(args: string[]) {
-    const fiftPath = path.resolve(__dirname, '..', 'bin', 'macos', arch === 'arm64' ? 'fift-arm64' : 'fift');
+    const command = (arch === 'arm64' ? 'fift-arm64' : 'fift') + commandSuffix;
+    const fiftPath = path.resolve(__dirname, '..', 'bin', platform, command);
     child.execSync(fiftPath + ' ' + args.join(' '), {
         stdio: 'inherit',
         env: {
