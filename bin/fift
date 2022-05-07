@@ -8,7 +8,18 @@ process.env['FIFTPATH'] = path.resolve(__dirname, '..', 'fiftlib');
 // Execute
 const arch = os.arch();
 const child = require('child_process');
-const fiftPath = path.resolve(__dirname, 'macos', arch === 'arm64' ? 'fift-arm64' : 'fift');
+const which = require('which');
+const arg = require('arg');
+
+const args = arg({
+    '--onlyBundled': Boolean,
+})
+let installedBinary;
+if (!args['--onlyBundled']) {
+    const binPath = which.sync('fift', {nothrow: true, all: true});
+    if (binPath) installedBinary = binPath.filter(x => !x.includes("node_modules/.bin"))[0];
+}
+const fiftPath = installedBinary || path.resolve(__dirname, '..', 'bin', 'macos', arch === 'arm64' ? 'fift-arm64' : 'fift');
 const [, , ...argv] = process.argv;
 try {
     child.execSync(fiftPath + ' ' + argv.join(' '), {

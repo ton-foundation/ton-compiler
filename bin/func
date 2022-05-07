@@ -5,11 +5,22 @@ const path = require('path');
 const os = require('os');
 const child = require('child_process');
 const arch = os.arch();
-const fiftPath = path.resolve(__dirname, 'macos',  arch === 'arm64' ? 'func-arm64' : 'func');
-console.log(fiftPath);
+const which = require('which');
+const arg = require('arg');
+
+const args = arg({
+    '--onlyBundled': Boolean,
+})
+let installedBinary;
+if (!args['--onlyBundled']) {
+    const binPath = which.sync('func', {nothrow: true, all: true})
+    if (binPath) installedBinary = binPath.filter(x => !x.includes("node_modules/.bin"))[0];
+}
+const funcPath = installedBinary || path.resolve(__dirname, '..', 'bin', 'macos', arch === 'arm64' ? 'func-arm64' : 'func');
+console.log(funcPath);
 const [, , ...argv] = process.argv;
 try {
-    child.execSync(fiftPath + ' ' + argv.join(' '), {
+    child.execSync(funcPath + ' ' + argv.join(' '), {
         stdio: 'inherit'
     });
 } catch (e) {
